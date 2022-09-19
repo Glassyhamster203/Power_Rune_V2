@@ -19,6 +19,9 @@
 #define ADC_Val 1000
 #define ADC_PIN 2
 
+#define LED_STRIP_COLUMN 8 //列数
+#define LED_STRIP_ROW 40   //行数
+
 #define LED_BRI
 
 char *ssid = (char *)"robomasterserver"; //添加了(char*)
@@ -29,13 +32,36 @@ CRGB Side_LEDS[Side_LED_NUM];
 CRGB Panel_LEDS[Panel_LED_NUM];
 
 void LED_Test();
+void Main_LED(void *arg);
 
-/* void Main_LED(*arg)
+void Main_LED(void *arg)
 {
+    /*
+                000111000
+                000011100
+                000001110
+                000000111
+                000000111
+                000001110
+                000011100
+                000111000
+                学长写的,直接抄来了*/
+
+    for (int i = 0; 1; i++)
+    {
+        if (i != 7)
+        {
+        
+        }
+        else
+        {
+            i = 0;
+        }
+    }
 
     vTaskDelay(1000);
 }
- */
+
 void LED_Test()
 {
     for (int i = 0; i < Main_LED_NUM; i++)
