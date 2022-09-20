@@ -33,9 +33,18 @@ CRGB Panel_LEDS[Panel_LED_NUM];
 bool Matrix[LED_STRIP_COLUMN][LED_STRIP_ROW];
 bool StartFlag = 0;
 bool HitFlag = 0;
+int UdpPort = 2333;
+int ReturnUdpPort = 2334;
+
 void Main_LED(void *arg);
 void LED_Test();
 void LED_Refresh();
+void Net_task();
+
+int R_Val;
+int G_Val;
+int B_Val;
+
 void Main_LED(void *arg)
 {
     int shift = 0;
@@ -196,6 +205,68 @@ void Main_Reset()
         Main_LEDS[i] = CRGB::Black;
     }
     FastLED.show();
+}
+void Net_task()
+{
+    WiFiUDP UdpConnect;
+    WiFiUDP ReturnUdp;
+
+    UdpConnect.begin(UdpPort);
+    ReturnUdp.begin(ReturnUdpPort);
+
+    Serial.println("Udp is ready!");
+    String UdpData = "";
+    /*  while (Serial.available()>0)
+     {
+         UdpData += char(Serial.read());
+     } */
+    // For serial debug
+    UdpData = UdpConnect.readString();
+
+    UdpConnect.readString();
+    if (UdpConnect.parsePacket())
+    {
+        DynamicJsonDocument json(1024);
+        DeserializationError err = deserializeJson(json, UdpData);
+        if (err)
+        {
+            printf("Json Error");
+        }
+        else
+        {
+            if (json["id"] = SelfID)
+            {
+                if (json["command"] = "start" && !StartFlag)
+                {
+                    StartFlag = 1;
+                    fill_solid(Panel_LEDS, Panel_LED_NUM, CRGB::Blue);
+                    FastLED.show();
+                }
+                if (json["command"] = "stop")
+                {
+                    ReturnUdp.beginPacket("255.255.255.255", ReturnUdpPort);
+                    ReturnUdp.print("{\"id\":" + String(SelfID) + ",\"status\":\"off\"}");
+                    ReturnUdp.endPacket();
+                    StartFlag = 0;
+                    fill_solid(Panel_LEDS, Panel_LED_NUM, CRGB::Black);
+                }
+                if (json["command"] = "on")
+                {
+                    StartFlag = 0;
+                    fill_solid(Main_LEDS, Main_LED_NUM, CRGB::Black);
+                    fill_solid(Panel_LEDS, Panel_LED_NUM, CRGB::Blue);
+                    fill_solid(Side_LEDS, Side_LED_NUM, CRGB::Blue);
+                }
+                if (json["command"] = "color")
+                {
+                    StartFlag = 1;
+                    R_Val = json["R"].as<int>();
+                    G_Val = json["G"].as<int>();
+                    B_Val = json["B"].as<int>();
+                }
+            }
+        }
+    }
 }
 void setup()
 {
