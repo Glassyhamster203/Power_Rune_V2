@@ -40,10 +40,10 @@ void Main_LED(void *arg);
 void LED_Test();
 void LED_Refresh();
 void Net_task();
-
-int R_Val;
-int G_Val;
-int B_Val;
+int R_Val = 0;
+int G_Val = 0;
+int B_Val = 255;
+CRGB Color(R_Val,G_Val,B_Val);
 
 void Main_LED(void *arg)
 {
@@ -65,6 +65,7 @@ void Main_LED(void *arg)
                  000011100
                  000111000
                  */
+                //学长写的,直接抄了
                 case 0:
                 {
                     Matrix[i][0] = 0;
@@ -170,7 +171,7 @@ void LED_Refresh()
             if (Matrix[i][j])
             {
                 k = i * 8 + j;
-                Main_LEDS[k] = CRGB::Blue;
+                Main_LEDS[k] = Color;
             }
         }
     }
@@ -179,21 +180,21 @@ void LED_Test()
 {
     for (int i = 0; i < Main_LED_NUM; i++)
     {
-        Main_LEDS[i] = CRGB::Blue;
+        Main_LEDS[i] = Color;
         FastLED.show();
         vTaskDelay(100);
     }
 
     for (int i = 0; i < Side_LED_NUM; i++)
     {
-        Side_LEDS[i] = CRGB::Blue;
+        Side_LEDS[i] = Color;
         FastLED.show();
         vTaskDelay(100);
     }
 
     for (int i = 0; i < Panel_LED_NUM; i++)
     {
-        Panel_LEDS[i] = CRGB::Blue;
+        Panel_LEDS[i] = Color;
         FastLED.show();
         vTaskDelay(100);
     }
@@ -221,7 +222,7 @@ void Net_task()
          UdpData += char(Serial.read());
      } */
     // For serial debug
-    UdpData = UdpConnect.readString();
+    UdpData = UdpConnect.readString();//read the data form udp sever
 
     UdpConnect.readString();
     if (UdpConnect.parsePacket())
@@ -239,7 +240,7 @@ void Net_task()
                 if (json["command"] = "start" && !StartFlag)
                 {
                     StartFlag = 1;
-                    fill_solid(Panel_LEDS, Panel_LED_NUM, CRGB::Blue);
+                    fill_solid(Panel_LEDS, Panel_LED_NUM, Color);
                     FastLED.show();
                 }
                 if (json["command"] = "stop")
@@ -254,8 +255,8 @@ void Net_task()
                 {
                     StartFlag = 0;
                     fill_solid(Main_LEDS, Main_LED_NUM, CRGB::Black);
-                    fill_solid(Panel_LEDS, Panel_LED_NUM, CRGB::Blue);
-                    fill_solid(Side_LEDS, Side_LED_NUM, CRGB::Blue);
+                    fill_solid(Panel_LEDS, Panel_LED_NUM, Color);
+                    fill_solid(Side_LEDS, Side_LED_NUM, Color);
                 }
                 if (json["command"] = "color")
                 {
