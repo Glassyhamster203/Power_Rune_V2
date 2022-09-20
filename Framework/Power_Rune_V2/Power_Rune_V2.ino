@@ -3,6 +3,8 @@
 #include <freertos/FreeRTOS.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <string.h>
+
 #define SelfID 1
 #define LED_TYPE WS2812
 #define COLOR_ORDER GRB
@@ -17,7 +19,7 @@
 #define Panel_LED_NUM 40
 
 #define ADC_Val 1000
-#define ADC_PIN 2
+#define HIT_SENSOR_PORT GPIO_NUM_33
 
 #define LED_STRIP_COLUMN 8 //列
 #define LED_STRIP_ROW 40   //行
@@ -43,7 +45,7 @@ void Net_task();
 int R_Val = 0;
 int G_Val = 0;
 int B_Val = 255;
-CRGB Color(R_Val,G_Val,B_Val);
+CRGB Color(R_Val, G_Val, B_Val);
 
 void Main_LED(void *arg)
 {
@@ -207,7 +209,7 @@ void Main_Reset()
     }
     FastLED.show();
 }
-void Net_task()
+void Net_task(void* arg)
 {
     WiFiUDP UdpConnect;
     WiFiUDP ReturnUdp;
@@ -222,7 +224,7 @@ void Net_task()
          UdpData += char(Serial.read());
      } */
     // For serial debug
-    UdpData = UdpConnect.readString();//read the data form udp sever
+    UdpData = UdpConnect.readString(); // read the data form udp sever
 
     UdpConnect.readString();
     if (UdpConnect.parsePacket())
@@ -236,7 +238,7 @@ void Net_task()
         else
         {
             if (json["id"] = SelfID)
-            {
+            {//Udp 命令行
                 if (json["command"] = "start" && !StartFlag)
                 {
                     StartFlag = 1;
@@ -266,6 +268,15 @@ void Net_task()
                     B_Val = json["B"].as<int>();
                 }
             }
+            if (analogRead(HIT_SENSOR_PORT) >= ADC_Val && StartFlag)
+            {//传感器部分
+                HitFlag = 1;
+                Serial.println("hit");
+                StartFlag = 0;
+                ReturnUdp.beginPacket("255.255.255.255", ReturnUdpPort);
+                ReturnUdp.print("{\"id\":" + String(SelfID) + ",\"status\":\"hit\"}");
+                ReturnUdp.endPacket();
+            }
         }
     }
 }
@@ -275,10 +286,12 @@ void setup()
     LEDS.addLeds<LED_TYPE, Side_LED_PIN, COLOR_ORDER>(Side_LEDS, Side_LED_NUM);
     LEDS.addLeds<LED_TYPE, Panel_LED_PIN, COLOR_ORDER>(Panel_LEDS, Panel_LED_NUM);
     LED_Test();
+    pinMode(HIT_SENSOR_PORT, INPUT);
     Serial.begin(115200);
     WiFi.begin(ssid, password);
     vTaskStartScheduler();
     xTaskCreate(Main_LED, "Main_LED", 2048, NULL, 4, NULL);
+    xTaskCreate(Net_task,"Net_task",2048,NULL,3,NULL);
 }
 
 void loop()
