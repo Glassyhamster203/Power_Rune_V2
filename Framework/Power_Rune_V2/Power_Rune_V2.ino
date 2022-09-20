@@ -54,109 +54,112 @@ void Main_LED(void *arg)
     {
         if (StartFlag && !HitFlag)
         {
-            for (int i = 0; i < LED_STRIP_ROW; i++)
+            for (int row_count= 0;row_count<9;row_count++)
             {
-                switch (i % 9)
-                { /*
-                 000111000
-                 000011100
-                 000001110
-                 000000111
-                 000000111
-                 000001110
-                 000011100
-                 000111000
-                 */
-                //学长写的,直接抄了
-                case 0:
+                for (int i = 0; i < LED_STRIP_ROW; i++)
                 {
-                    Matrix[i][0] = 0;
-                    Matrix[i][1] = 0;
-                    Matrix[i][2] = 0;
-                    Matrix[i][3] = 1;
-                    Matrix[i][4] = 1;
-                    Matrix[i][5] = 0;
-                    Matrix[i][6] = 0;
-                    Matrix[i][7] = 0;
-                }
-                break;
-
-                case 1:
-                {
-                    Matrix[i][0] = 0;
-                    Matrix[i][1] = 0;
-                    Matrix[i][2] = 1;
-                    Matrix[i][3] = 1;
-                    Matrix[i][4] = 1;
-                    Matrix[i][5] = 1;
-                    Matrix[i][6] = 0;
-                    Matrix[i][7] = 0;
-                }
-                break;
-                case 2:
-                {
-                    Matrix[i][0] = 0;
-                    Matrix[i][1] = 1;
-                    Matrix[i][2] = 1;
-                    Matrix[i][3] = 1;
-                    Matrix[i][4] = 1;
-                    Matrix[i][5] = 1;
-                    Matrix[i][6] = 1;
-                    Matrix[i][7] = 0;
-                }
-                break;
-                case 3:
-                {
-                    Matrix[i][0] = 1;
-                    Matrix[i][1] = 1;
-                    Matrix[i][2] = 1;
-                    Matrix[i][3] = 0;
-                    Matrix[i][4] = 0;
-                    Matrix[i][5] = 1;
-                    Matrix[i][6] = 1;
-                    Matrix[i][7] = 1;
-                }
-                break;
-                case 4:
-                {
-                    Matrix[i][0] = 1;
-                    Matrix[i][1] = 1;
-                    Matrix[i][2] = 0;
-                    Matrix[i][3] = 0;
-                    Matrix[i][4] = 0;
-                    Matrix[i][5] = 0;
-                    Matrix[i][6] = 1;
-                    Matrix[i][7] = 1;
-                }
-                break;
-                case 5:
-                {
-                    Matrix[i][0] = 1;
-                    Matrix[i][1] = 0;
-                    Matrix[i][2] = 0;
-                    Matrix[i][3] = 0;
-                    Matrix[i][4] = 0;
-                    Matrix[i][5] = 0;
-                    Matrix[i][6] = 0;
-                    Matrix[i][7] = 1;
-                }
-                break;
-                default:
-                {
-
-                    for (int j = 0; j < LED_STRIP_COLUMN; j++)
+                    switch (i % 9+row_count)
+                    { /*
+                     000111000
+                     000011100
+                     000001110
+                     000000111
+                     000000111
+                     000001110
+                     000011100
+                     000111000
+                     */
+                    //学长写的,直接抄了
+                    case 0:
                     {
-                        Matrix[i][j] = 0;
+                        Matrix[i][0] = 0;
+                        Matrix[i][1] = 0;
+                        Matrix[i][2] = 0;
+                        Matrix[i][3] = 1;
+                        Matrix[i][4] = 1;
+                        Matrix[i][5] = 0;
+                        Matrix[i][6] = 0;
+                        Matrix[i][7] = 0;
                     }
                     break;
-                }
-                    if (i = LED_STRIP_ROW)
-                    {
-                        LED_Refresh();
-                    }
-                }
 
-                vTaskDelay(1000);
+                    case 1:
+                    {
+                        Matrix[i][0] = 0;
+                        Matrix[i][1] = 0;
+                        Matrix[i][2] = 1;
+                        Matrix[i][3] = 1;
+                        Matrix[i][4] = 1;
+                        Matrix[i][5] = 1;
+                        Matrix[i][6] = 0;
+                        Matrix[i][7] = 0;
+                    }
+                    break;
+                    case 2:
+                    {
+                        Matrix[i][0] = 0;
+                        Matrix[i][1] = 1;
+                        Matrix[i][2] = 1;
+                        Matrix[i][3] = 1;
+                        Matrix[i][4] = 1;
+                        Matrix[i][5] = 1;
+                        Matrix[i][6] = 1;
+                        Matrix[i][7] = 0;
+                    }
+                    break;
+                    case 3:
+                    {
+                        Matrix[i][0] = 1;
+                        Matrix[i][1] = 1;
+                        Matrix[i][2] = 1;
+                        Matrix[i][3] = 0;
+                        Matrix[i][4] = 0;
+                        Matrix[i][5] = 1;
+                        Matrix[i][6] = 1;
+                        Matrix[i][7] = 1;
+                    }
+                    break;
+                    case 4:
+                    {
+                        Matrix[i][0] = 1;
+                        Matrix[i][1] = 1;
+                        Matrix[i][2] = 0;
+                        Matrix[i][3] = 0;
+                        Matrix[i][4] = 0;
+                        Matrix[i][5] = 0;
+                        Matrix[i][6] = 1;
+                        Matrix[i][7] = 1;
+                    }
+                    break;
+                    case 5:
+                    {
+                        Matrix[i][0] = 1;
+                        Matrix[i][1] = 0;
+                        Matrix[i][2] = 0;
+                        Matrix[i][3] = 0;
+                        Matrix[i][4] = 0;
+                        Matrix[i][5] = 0;
+                        Matrix[i][6] = 0;
+                        Matrix[i][7] = 1;
+                    }
+                    break;
+                    default:
+                    {
+
+                        for (int j = 0; j < LED_STRIP_COLUMN; j++)
+                        {
+                            Matrix[i][j] = 0;
+                        }
+                        break;
+                    }
+                        if (i = LED_STRIP_ROW)
+                        {
+                            LED_Refresh();
+                        }
+                    }
+
+                    vTaskDelay(1000);
+                }
             }
         }
     }
@@ -209,7 +212,7 @@ void Main_Reset()
     }
     FastLED.show();
 }
-void Net_task(void* arg)
+void Net_task(void *arg)
 {
     WiFiUDP UdpConnect;
     WiFiUDP ReturnUdp;
@@ -238,7 +241,7 @@ void Net_task(void* arg)
         else
         {
             if (json["id"] = SelfID)
-            {//Udp 命令行
+            { // Udp 命令行
                 if (json["command"] = "start" && !StartFlag)
                 {
                     StartFlag = 1;
@@ -269,7 +272,7 @@ void Net_task(void* arg)
                 }
             }
             if (analogRead(HIT_SENSOR_PORT) >= ADC_Val && StartFlag)
-            {//传感器部分
+            { //传感器部分
                 HitFlag = 1;
                 Serial.println("hit");
                 StartFlag = 0;
@@ -291,7 +294,7 @@ void setup()
     WiFi.begin(ssid, password);
     vTaskStartScheduler();
     xTaskCreate(Main_LED, "Main_LED", 2048, NULL, 4, NULL);
-    xTaskCreate(Net_task,"Net_task",2048,NULL,3,NULL);
+    xTaskCreate(Net_task, "Net_task", 2048, NULL, 3, NULL);
 }
 
 void loop()
