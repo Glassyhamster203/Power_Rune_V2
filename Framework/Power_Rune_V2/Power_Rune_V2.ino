@@ -31,90 +31,121 @@ CRGB Main_LEDS[Main_LED_NUM];
 CRGB Side_LEDS[Side_LED_NUM];
 CRGB Panel_LEDS[Panel_LED_NUM];
 bool Matrix[LED_STRIP_COLUMN][LED_STRIP_ROW];
-
+bool StartFlag = 0;
+bool HitFlag = 0;
 void Main_LED(void *arg);
 void LED_Test();
 void LED_Refresh();
 void Main_LED(void *arg)
 {
+    int shift = 0;
     while (1)
     {
-
-        for (int i = 0;; i++)
+        if (StartFlag && !HitFlag)
         {
-            switch (i)
+            for (int i = 0; i < LED_STRIP_ROW; i++)
             {
-            case 0:
-            {
-                Matrix[i][0] = 0;
-                Matrix[i][1] = 0;
-                Matrix[i][2] = 0;
-                Matrix[i][3] = 1;
-                Matrix[i][4] = 1;
-                Matrix[i][5] = 0;
-                Matrix[i][6] = 0;
-                Matrix[i][7] = 0;
-            }
+                switch (i % 9)
+                { /*
+                 000111000
+                 000011100
+                 000001110
+                 000000111
+                 000000111
+                 000001110
+                 000011100
+                 000111000
+                 */
+                case 0:
+                {
+                    Matrix[i][0] = 0;
+                    Matrix[i][1] = 0;
+                    Matrix[i][2] = 0;
+                    Matrix[i][3] = 1;
+                    Matrix[i][4] = 1;
+                    Matrix[i][5] = 0;
+                    Matrix[i][6] = 0;
+                    Matrix[i][7] = 0;
+                }
+                break;
 
-            case 1:
-            {
-                Matrix[i][0] = 0;
-                Matrix[i][1] = 0;
-                Matrix[i][2] = 1;
-                Matrix[i][3] = 1;
-                Matrix[i][4] = 1;
-                Matrix[i][5] = 1;
-                Matrix[i][6] = 0;
-                Matrix[i][7] = 0;
-            }
-            case 2:
-            {
-                Matrix[i][0] = 0;
-                Matrix[i][1] = 1;
-                Matrix[i][2] = 1;
-                Matrix[i][3] = 1;
-                Matrix[i][4] = 1;
-                Matrix[i][5] = 1;
-                Matrix[i][6] = 1;
-                Matrix[i][7] = 0;
-            }
-            case 3:
-            {
-                Matrix[i][0] = 1;
-                Matrix[i][1] = 1;
-                Matrix[i][2] = 1;
-                Matrix[i][3] = 0;
-                Matrix[i][4] = 0;
-                Matrix[i][5] = 1;
-                Matrix[i][6] = 1;
-                Matrix[i][7] = 1;
-            }
-            case 4:
-            {
-                Matrix[i][0] = 1;
-                Matrix[i][1] = 1;
-                Matrix[i][2] = 0;
-                Matrix[i][3] = 0;
-                Matrix[i][4] = 0;
-                Matrix[i][5] = 0;
-                Matrix[i][6] = 1;
-                Matrix[i][7] = 1;
-            }
-            case 5:
-            {
-                Matrix[i][0] = 1;
-                Matrix[i][1] = 0;
-                Matrix[i][2] = 0;
-                Matrix[i][3] = 0;
-                Matrix[i][4] = 0;
-                Matrix[i][5] = 0;
-                Matrix[i][6] = 0;
-                Matrix[i][7] = 1;
-            }
-            case 6:
-            }
+                case 1:
+                {
+                    Matrix[i][0] = 0;
+                    Matrix[i][1] = 0;
+                    Matrix[i][2] = 1;
+                    Matrix[i][3] = 1;
+                    Matrix[i][4] = 1;
+                    Matrix[i][5] = 1;
+                    Matrix[i][6] = 0;
+                    Matrix[i][7] = 0;
+                }
+                break;
+                case 2:
+                {
+                    Matrix[i][0] = 0;
+                    Matrix[i][1] = 1;
+                    Matrix[i][2] = 1;
+                    Matrix[i][3] = 1;
+                    Matrix[i][4] = 1;
+                    Matrix[i][5] = 1;
+                    Matrix[i][6] = 1;
+                    Matrix[i][7] = 0;
+                }
+                break;
+                case 3:
+                {
+                    Matrix[i][0] = 1;
+                    Matrix[i][1] = 1;
+                    Matrix[i][2] = 1;
+                    Matrix[i][3] = 0;
+                    Matrix[i][4] = 0;
+                    Matrix[i][5] = 1;
+                    Matrix[i][6] = 1;
+                    Matrix[i][7] = 1;
+                }
+                break;
+                case 4:
+                {
+                    Matrix[i][0] = 1;
+                    Matrix[i][1] = 1;
+                    Matrix[i][2] = 0;
+                    Matrix[i][3] = 0;
+                    Matrix[i][4] = 0;
+                    Matrix[i][5] = 0;
+                    Matrix[i][6] = 1;
+                    Matrix[i][7] = 1;
+                }
+                break;
+                case 5:
+                {
+                    Matrix[i][0] = 1;
+                    Matrix[i][1] = 0;
+                    Matrix[i][2] = 0;
+                    Matrix[i][3] = 0;
+                    Matrix[i][4] = 0;
+                    Matrix[i][5] = 0;
+                    Matrix[i][6] = 0;
+                    Matrix[i][7] = 1;
+                }
+                break;
+                default:
+                {
 
-            vTaskDelay(1000);
+                    for (int j = 0; j < LED_STRIP_COLUMN; j++)
+                    {
+                        Matrix[i][j] = 0;
+                    }
+                    break;
+                }
+                    if (i = LED_STRIP_ROW)
+                    {
+                        LED_Refresh();
+                    }
+                }
+
+                vTaskDelay(1000);
+            }
         }
     }
 
@@ -123,9 +154,9 @@ void Main_LED(void *arg)
 void LED_Refresh()
 {
     int k = 0;
-    for (int i = 0; i < LED_STRIP_COLUMN; i++)
+    for (int i = LED_STRIP_COLUMN; i > 0; i--)
     {
-        for (int j = 0; j < LED_STRIP_ROW; j++)
+        for (int j = LED_STRIP_ROW; j > 0; j--)
         {
             if (Matrix[i][j])
             {
@@ -158,7 +189,14 @@ void LED_Test()
         vTaskDelay(100);
     }
 }
-
+void Main_Reset()
+{
+    for (int i = 0; i < Main_LED_NUM; i++)
+    {
+        Main_LEDS[i] = CRGB::Black;
+    }
+    FastLED.show();
+}
 void setup()
 {
     LEDS.addLeds<LED_TYPE, Main_LED_PIN, COLOR_ORDER>(Main_LEDS, Main_LED_NUM);
@@ -168,7 +206,7 @@ void setup()
     Serial.begin(115200);
     WiFi.begin(ssid, password);
     vTaskStartScheduler();
-    // xTaskCreate(Main_LED, "Main_LED", 2048, NULL, 4, NULL);
+    xTaskCreate(Main_LED, "Main_LED", 2048, NULL, 4, NULL);
 }
 
 void loop()
