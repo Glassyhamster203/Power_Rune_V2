@@ -13,10 +13,10 @@
 #define Main_LED_NUM 320
 
 #define Side_LED_PIN GPIO_NUM_21
-#define Side_LED_NUM 50
+#define Side_LED_NUM 70
 
 #define Panel_LED_PIN GPIO_NUM_17
-#define Panel_LED_NUM 40
+#define Panel_LED_NUM 60
 
 #define ADC_Val 1000
 #define HIT_SENSOR_PORT GPIO_NUM_33
@@ -42,6 +42,7 @@ void Main_LED(void *arg);
 void LED_Test();
 void LED_Refresh();
 void Net_task();
+void LED_Reset();
 int R_Val = 0;
 int G_Val = 0;
 int B_Val = 255;
@@ -54,11 +55,11 @@ void Main_LED(void *arg)
     {
         if (StartFlag && !HitFlag)
         {
-            for (int row_count= 0;row_count<9;row_count++)
+            for (int row_count = 0; row_count < 9; row_count++)
             {
                 for (int i = 0; i < LED_STRIP_ROW; i++)
                 {
-                    switch (i % 9+row_count)
+                    switch (i % 9 + row_count)
                     { /*
                      000111000
                      000011100
@@ -187,22 +188,40 @@ void LED_Test()
     {
         Main_LEDS[i] = Color;
         FastLED.show();
-        vTaskDelay(100);
+        vTaskDelay(1);
     }
 
     for (int i = 0; i < Side_LED_NUM; i++)
     {
         Side_LEDS[i] = Color;
         FastLED.show();
-        vTaskDelay(100);
+        vTaskDelay(1);
     }
 
     for (int i = 0; i < Panel_LED_NUM; i++)
     {
         Panel_LEDS[i] = Color;
         FastLED.show();
-        vTaskDelay(100);
+        vTaskDelay(1);
     }
+}
+void LED_Reset()
+{
+    for (int i = 0; i < Main_LED_NUM; i++)
+    {
+        Main_LEDS[i] = CRGB::Black;
+    }
+
+    for (int i = 0; i < Side_LED_NUM; i++)
+    {
+        Side_LEDS[i] = CRGB::Black;
+    }
+
+    for (int i = 0; i < Panel_LED_NUM; i++)
+    {
+        Panel_LEDS[i] = CRGB::Black;
+    }
+    FastLED.show();
 }
 void Main_Reset()
 {
@@ -221,64 +240,72 @@ void Net_task(void *arg)
     ReturnUdp.begin(ReturnUdpPort);
 
     Serial.println("Udp is ready!");
+    DynamicJsonDocument json(1024);
     String UdpData = "";
-    /*  while (Serial.available()>0)
-     {
-         UdpData += char(Serial.read());
-     } */
-    // For serial debug
-    UdpData = UdpConnect.readString(); // read the data form udp sever
 
     UdpConnect.readString();
-    if (UdpConnect.parsePacket())
+    while (1)
     {
-        DynamicJsonDocument json(1024);
-        DeserializationError err = deserializeJson(json, UdpData);
-        if (err)
+        while (Serial.available() > 0)
         {
-            printf("Json Error");
+            UdpData += char(Serial.read());
         }
-        else
+        if (UdpData != "")
         {
-            if (json["id"] = SelfID)
-            { // Udp 命令行
-                if (json["command"] = "start" && !StartFlag)
-                {
-                    StartFlag = 1;
-                    fill_solid(Panel_LEDS, Panel_LED_NUM, Color);
-                    FastLED.show();
-                }
-                if (json["command"] = "stop")
-                {
-                    ReturnUdp.beginPacket("255.255.255.255", ReturnUdpPort);
-                    ReturnUdp.print("{\"id\":" + String(SelfID) + ",\"status\":\"off\"}");
-                    ReturnUdp.endPacket();
-                    StartFlag = 0;
-                    fill_solid(Panel_LEDS, Panel_LED_NUM, CRGB::Black);
-                }
-                if (json["command"] = "on")
-                {
-                    StartFlag = 0;
-                    fill_solid(Main_LEDS, Main_LED_NUM, CRGB::Black);
-                    fill_solid(Panel_LEDS, Panel_LED_NUM, Color);
-                    fill_solid(Side_LEDS, Side_LED_NUM, Color);
-                }
-                if (json["command"] = "color")
-                {
-                    StartFlag = 1;
-                    R_Val = json["R"].as<int>();
-                    G_Val = json["G"].as<int>();
-                    B_Val = json["B"].as<int>();
-                }
+
+            // For serial debug
+            // UdpData = UdpConnect.readString(); // read the data form udp sever
+
+            DeserializationError err = deserializeJson(json, UdpData);
+            if (err)
+            {
+                Serial.printf("Json Error");
             }
-            if (analogRead(HIT_SENSOR_PORT) >= ADC_Val && StartFlag)
-            { //传感器部分
-                HitFlag = 1;
-                Serial.println("hit");
-                StartFlag = 0;
-                ReturnUdp.beginPacket("255.255.255.255", ReturnUdpPort);
-                ReturnUdp.print("{\"id\":" + String(SelfID) + ",\"status\":\"hit\"}");
-                ReturnUdp.endPacket();
+            else
+            {
+                if (json["id"] = SelfID)
+                { // Udp 命令行
+                    Serial.println("ready");
+                    if (json["command"] = "start" && !StartFlag)
+                    {
+                        StartFlag = 1;
+                        fill_solid(Panel_LEDS, Panel_LED_NUM, Color);
+                        FastLED.show();
+                        Serial.println("Started!");
+                    }
+                    if (json["command"] = "stop")
+                    {
+                        ReturnUdp.beginPacket("255.255.255.255", ReturnUdpPort);
+                        ReturnUdp.print("{\"id\":" + String(SelfID) + ",\"status\":\"off\"}");
+                        ReturnUdp.endPacket();
+                        StartFlag = 0;
+                        fill_solid(Panel_LEDS, Panel_LED_NUM, CRGB::Black);
+                    }
+                    if (json["command"] = "on")
+                    {
+                        Serial.println("ON");
+                        StartFlag = 0;
+                        fill_solid(Main_LEDS, Main_LED_NUM, CRGB::Black);
+                        fill_solid(Panel_LEDS, Panel_LED_NUM, Color);
+                        fill_solid(Side_LEDS, Side_LED_NUM, Color);
+                    }
+                    if (json["command"] = "color")
+                    {
+                        StartFlag = 1;
+                        R_Val = json["R"].as<int>();
+                        G_Val = json["G"].as<int>();
+                        B_Val = json["B"].as<int>();
+                    }
+                }
+                if (analogRead(HIT_SENSOR_PORT) >= ADC_Val && StartFlag)
+                { //传感器部分
+                    HitFlag = 1;
+                    Serial.println("hit");
+                    StartFlag = 0;
+                    ReturnUdp.beginPacket("255.255.255.255", ReturnUdpPort);
+                    ReturnUdp.print("{\"id\":" + String(SelfID) + ",\"status\":\"hit\"}");
+                    ReturnUdp.endPacket();
+                }
             }
         }
     }
@@ -289,12 +316,20 @@ void setup()
     LEDS.addLeds<LED_TYPE, Side_LED_PIN, COLOR_ORDER>(Side_LEDS, Side_LED_NUM);
     LEDS.addLeds<LED_TYPE, Panel_LED_PIN, COLOR_ORDER>(Panel_LEDS, Panel_LED_NUM);
     LED_Test();
+    LED_Reset();
+    
+    delay(100);
     pinMode(HIT_SENSOR_PORT, INPUT);
     Serial.begin(115200);
+    WiFi.mode(WIFI_STA); 
     WiFi.begin(ssid, password);
-    vTaskStartScheduler();
+    // vTaskStartScheduler();
+    Serial.println("Booted");
     xTaskCreate(Main_LED, "Main_LED", 2048, NULL, 4, NULL);
     xTaskCreate(Net_task, "Net_task", 2048, NULL, 3, NULL);
+    vTaskStartScheduler();
+    
+    
 }
 
 void loop()
