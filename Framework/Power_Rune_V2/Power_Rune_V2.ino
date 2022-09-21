@@ -1,6 +1,7 @@
 #include <FastLED.h>
 #include <ArduinoJson.h>
 #include <freertos/FreeRTOS.h>
+#include<FreeRTOSConfig.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <string.h>
@@ -51,6 +52,7 @@ CRGB Color(R_Val, G_Val, B_Val);
 void Main_LED(void *arg)
 {
     int shift = 0;
+    Serial.println("Main Ready!");
     while (1)
     {
         if (StartFlag && !HitFlag)
@@ -242,8 +244,8 @@ void Net_task(void *arg)
     Serial.println("Udp is ready!");
     DynamicJsonDocument json(1024);
     String UdpData = "";
-
-    UdpConnect.readString();
+    //   vTaskDelay(1);
+    // UdpConnect.readString();
     while (1)
     {
         while (Serial.available() > 0)
@@ -272,14 +274,17 @@ void Net_task(void *arg)
                         fill_solid(Panel_LEDS, Panel_LED_NUM, Color);
                         FastLED.show();
                         Serial.println("Started!");
+                        UdpData ="";
                     }
                     if (json["command"] = "stop")
-                    {
+                    {   
+                        Serial.printf("stopped");
                         ReturnUdp.beginPacket("255.255.255.255", ReturnUdpPort);
                         ReturnUdp.print("{\"id\":" + String(SelfID) + ",\"status\":\"off\"}");
                         ReturnUdp.endPacket();
                         StartFlag = 0;
                         fill_solid(Panel_LEDS, Panel_LED_NUM, CRGB::Black);
+                        UdpData = "";
                     }
                     if (json["command"] = "on")
                     {
@@ -288,6 +293,7 @@ void Net_task(void *arg)
                         fill_solid(Main_LEDS, Main_LED_NUM, CRGB::Black);
                         fill_solid(Panel_LEDS, Panel_LED_NUM, Color);
                         fill_solid(Side_LEDS, Side_LED_NUM, Color);
+                        UdpData = "";
                     }
                     if (json["command"] = "color")
                     {
@@ -295,6 +301,7 @@ void Net_task(void *arg)
                         R_Val = json["R"].as<int>();
                         G_Val = json["G"].as<int>();
                         B_Val = json["B"].as<int>();
+                        UdpData = "";
                     }
                 }
                 if (analogRead(HIT_SENSOR_PORT) >= ADC_Val && StartFlag)
@@ -318,16 +325,19 @@ void setup()
     LED_Test();
     LED_Reset();
     
-    delay(100);
+    vTaskDelay(100);
     pinMode(HIT_SENSOR_PORT, INPUT);
     Serial.begin(115200);
     WiFi.mode(WIFI_STA); 
     WiFi.begin(ssid, password);
     // vTaskStartScheduler();
     Serial.println("Booted");
-    xTaskCreate(Main_LED, "Main_LED", 2048, NULL, 4, NULL);
-    xTaskCreate(Net_task, "Net_task", 2048, NULL, 3, NULL);
+    xTaskCreatePinnedToCore(Main_LED, "Main_LED", 2048, NULL, 4, NULL,1);
+    xTaskCreatePinnedToCore(Net_task, "Net_task", 2048, NULL, 5, NULL,0);
+    // vTaskDelay(100);
     vTaskStartScheduler();
+    while (1){}
+    
     
     
 }
